@@ -1,0 +1,12 @@
+C:\Users\Michael\Documents\Projects\ProjectStats\src\ProjectStats.Tests\bin\Debug\ProjectStats.Tests.dll
+C:\Users\Michael\Documents\Projects\ProjectStats\src\ProjectStats.Tests\bin\Debug\ProjectStats.Tests.pdb
+C:\Users\Michael\Documents\Projects\ProjectStats\src\ProjectStats.Tests\bin\Debug\nunit.framework.dll
+C:\Users\Michael\Documents\Projects\ProjectStats\src\ProjectStats.Tests\bin\Debug\ProjectStats.dll
+C:\Users\Michael\Documents\Projects\ProjectStats\src\ProjectStats.Tests\bin\Debug\Newtonsoft.Json.dll
+C:\Users\Michael\Documents\Projects\ProjectStats\src\ProjectStats.Tests\bin\Debug\ProjectStats.pdb
+C:\Users\Michael\Documents\Projects\ProjectStats\src\ProjectStats.Tests\bin\Debug\nunit.framework.xml
+C:\Users\Michael\Documents\Projects\ProjectStats\src\ProjectStats.Tests\bin\Debug\Newtonsoft.Json.pdb
+C:\Users\Michael\Documents\Projects\ProjectStats\src\ProjectStats.Tests\bin\Debug\Newtonsoft.Json.xml
+C:\Users\Michael\Documents\Projects\ProjectStats\src\ProjectStats.Tests\obj\Debug\ResolveAssemblyReference.cache
+C:\Users\Michael\Documents\Projects\ProjectStats\src\ProjectStats.Tests\obj\Debug\ProjectStats.Tests.dll
+C:\Users\Michael\Documents\Projects\ProjectStats\src\ProjectStats.Tests\obj\Debug\ProjectStats.Tests.pdb
