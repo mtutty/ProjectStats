@@ -46,6 +46,19 @@ namespace ProjectStats.Model {
             return CreateDataTable(@"CycleTime", sd);
         }
 
+        public static DataTable CreateCountByWeekTable() {
+            StringDictionary sd = new StringDictionary();
+
+            sd.Add(@"rolluptype", @"rolluptype");
+            sd.Add("rollupvalue", "rollupvalue");
+            sd.Add("date", "date");
+            sd.Add("count1", "count1");
+            sd.Add("count2", "count2");
+            sd.Add("count3", "count3");
+
+            return CreateDataTable(@"CycleTime", sd);
+        }
+
         public static DataTable CreateDataTable(string TableName, StringDictionary FieldList) {
             DataTable ret = new DataTable(TableName);
 

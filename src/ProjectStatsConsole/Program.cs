@@ -52,6 +52,21 @@ namespace ProjectStatsConsole {
                     dt.WriteXml(args.SaveToFile, XmlWriteMode.WriteSchema);
                 }
             }
+
+            if (dt != null) {
+                Separator();
+                Out(@"Cycle Times");
+                DataTable ct = ProjectStats.Logic.ProjectStatsLogic.CycleTime(dt);
+
+                string header = string.Empty;
+                foreach (DataRow item in ct.Rows) {
+                    Out(@"{0} {1}: {2}, {3}, {4}, {5}, {6}, {7}",
+                        item[@"rolluptype"], item[@"rollupvalue"],
+                        item[@"bin1"], item[@"bin2"], item[@"bin3"],
+                        item[@"bin4"], item[@"bin5"], item[@"bin6"]
+                        );
+                }
+            }
         }
 
         protected override void Exit(Arguments arguments) {

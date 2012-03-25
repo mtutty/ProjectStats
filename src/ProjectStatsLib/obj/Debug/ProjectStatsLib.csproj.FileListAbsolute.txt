@@ -1,8 +1,0 @@
-C:\Users\Michael\Documents\Projects\ProjectStats\src\ProjectStatsLib\bin\Debug\ProjectStats.dll
-C:\Users\Michael\Documents\Projects\ProjectStats\src\ProjectStatsLib\bin\Debug\ProjectStats.pdb
-C:\Users\Michael\Documents\Projects\ProjectStats\src\ProjectStatsLib\bin\Debug\Newtonsoft.Json.dll
-C:\Users\Michael\Documents\Projects\ProjectStats\src\ProjectStatsLib\bin\Debug\Newtonsoft.Json.pdb
-C:\Users\Michael\Documents\Projects\ProjectStats\src\ProjectStatsLib\bin\Debug\Newtonsoft.Json.xml
-C:\Users\Michael\Documents\Projects\ProjectStats\src\ProjectStatsLib\obj\Debug\ResolveAssemblyReference.cache
-C:\Users\Michael\Documents\Projects\ProjectStats\src\ProjectStatsLib\obj\Debug\ProjectStats.dll
-C:\Users\Michael\Documents\Projects\ProjectStats\src\ProjectStatsLib\obj\Debug\ProjectStats.pdb

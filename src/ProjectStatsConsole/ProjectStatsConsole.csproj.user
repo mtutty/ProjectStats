@@ -4,6 +4,6 @@
     <ProjectView>ProjectFiles</ProjectView>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
-    <StartArguments>-o Hireahelper -r Hireahelper -u mtutty -p P0ssibl3 -s sample.xml</StartArguments>
+    <StartArguments>-o Hireahelper -r Hireahelper -u mtutty -p P0ssibl3 -l sample.xml -w</StartArguments>
   </PropertyGroup>
 </Project>
