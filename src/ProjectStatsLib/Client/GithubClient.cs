@@ -81,14 +81,17 @@ namespace ProjectStats.Client {
             return JObject.Parse(response);
         }
 
-        protected static void AppendJsonData(string rawJson, DataTable dt) {
+        protected static bool AppendJsonData(string rawJson, DataTable dt) {
             string json = string.Format("{0}result: {1}{2}", @"{", rawJson, @"}");
 
             JObject root = JObject.Parse(json);
             JArray items = (JArray)root["result"];
 
-            foreach (JObject item in items) {
+            bool anyItems = false;
 
+            foreach (JObject item in items) {
+                anyItems = true;
+                
                 DataRow dr = dt.NewRow();
 
                 foreach (DataColumn col in dt.Columns) {
@@ -96,9 +99,13 @@ namespace ProjectStats.Client {
                     if (val == null) continue;
                     dr[col] = val.ToString();
                 }
+                if (dr.IsNull(@"pull_request") == false &&
+                    string.IsNullOrEmpty((string)dr[@"pull_request"]) == false) continue;
                 dt.Rows.Add(dr);
             }
             dt.AcceptChanges();
+
+            return anyItems;
         }
 
         private static string GetName(JToken token) {
@@ -116,20 +123,32 @@ namespace ProjectStats.Client {
         public DataTable ListIssues(string userOrOrg, string repo, DateTime? since) {
             // GET /repos/:user/:repo/issues
             int pageSize = 100;
-            int page = 0;
 
-            string template = @"/repos/{0}/{1}/issues?state=open,closed&page={2}&per_page={3}";
-            if (since.HasValue)
-                template = @"/repos/{0}/{1}/issues?state=closed&page={2}&per_page={3}&since={4:s}&sort=updated&direction=desc";
             DataTable ret = ProjectStatsModelFactory.CreateIssuesTable();
 
-            do {
-                if (since.HasValue)
-                    AppendJsonData(GetRequest(string.Format(template, userOrOrg, repo, ++page, pageSize, since)), ret);
-                else
-                    AppendJsonData(GetRequest(string.Format(template, userOrOrg, repo, ++page, pageSize)), ret);
-            } while (ret.Rows.Count == (page * pageSize));
+            if (since.HasValue) {
+                int page = 0;
+                string template = @"/repos/{0}/{1}/issues?state=closed&page={2}&per_page={3}&since={4:s}&sort=updated&direction=desc";
+                string response = string.Empty;
+                do {
+                    response = GetRequest(string.Format(template, userOrOrg, repo, ++page, pageSize, since));
+                } while (AppendJsonData(response, ret));
+            } else {
+                // Apparently, can't fetch BOTH open and closed in the same API call.  Guh.
+                int page = 0;
+                string template = @"/repos/{0}/{1}/issues?state=open&page={2}&per_page={3}";
+                string response = string.Empty;
+                do {
+                    response = GetRequest(string.Format(template, userOrOrg, repo, ++page, pageSize, since));
+                } while (AppendJsonData(response, ret));
 
+                page = 0;
+                template = @"/repos/{0}/{1}/issues?state=closed&page={2}&per_page={3}";
+                response = string.Empty;
+                do {
+                    response = GetRequest(string.Format(template, userOrOrg, repo, ++page, pageSize, since));
+                } while (AppendJsonData(response, ret));
+            }
             return ret;
         }
 

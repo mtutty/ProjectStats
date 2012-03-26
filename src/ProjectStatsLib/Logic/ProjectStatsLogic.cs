@@ -67,22 +67,15 @@ namespace ProjectStats.Logic {
             foreach (DataRow dr in rows) {
                 int idx = 0;
                 int age = IssueAge(dr);
-                for (idx = 0; idx < bins.Length; idx++) {
-                    if (age < bins[idx]) break;
+                if (age > -1) {
+                    for (idx = 0; idx < bins.Length; idx++) {
+                        if (age < bins[idx]) break;
+                    }
+                    values[idx] += 1;
                 }
-                values[idx] += 1;
             }
 
             return values;
-        }
-
-        private static int IssueAge(DataRow dr) {
-            if (dr.IsNull(@"created_at")) return 0;
-            if (dr.IsNull(@"closed_at")) return -1;
-            DateTime created = DateTime.Parse(dr[@"created_at"].ToString());
-            DateTime closed = DateTime.Parse(dr[@"closed_at"].ToString());
-
-            return closed.Subtract(created).Days;
         }
         #endregion
 
@@ -114,11 +107,7 @@ namespace ProjectStats.Logic {
             SortedDictionary<string, int> counts = new SortedDictionary<string, int>();
 
             foreach (DataRowView drv in dv) {
-                string key = WeekEnding(drv[@"closed_at"]).ToString(@"yyyy-MM-dd");
-                if (counts.ContainsKey(key))
-                    counts[key] += 1;
-                else
-                    counts.Add(key, 1);
+                AddToWeeklyCount(counts, drv[@"closed_at"]);
             }
 
             foreach (string key in counts.Keys) {
@@ -133,16 +122,100 @@ namespace ProjectStats.Logic {
 
         #endregion
 
+        #region Backlog (total + opened - closed by week)
+        public static DataTable Backlog(DataTable dtSource) {
+            DataTable ret = ProjectStatsModelFactory.CreateCountByWeekTable(@"Backlog");
+
+            AddBacklogRows(dtSource, ret);
+            AddBacklogRows(dtSource, ret, @"milestone");
+            AddBacklogRows(dtSource, ret, @"user");
+            return ret;
+        }
+
+        private static void AddBacklogRows(DataTable dtSource, DataTable ret) {
+            DataView dv = new DataView(dtSource);
+            AddBacklogRows(dv, ret, @"Overall", string.Empty);
+        }
+
+        private static void AddBacklogRows(DataTable dtSource, DataTable ret, string rollupField) {
+            string filterTemplate = @"{0} = '{1}'";
+            foreach (string rollupValue in DistinctValues(dtSource.AsEnumerable(), rollupField)) {
+                DataView dv = new DataView(dtSource, string.Format(filterTemplate, rollupField, rollupValue), null, DataViewRowState.CurrentRows);
+                AddBacklogRows(dv, ret, rollupField, rollupValue);
+            }
+        }
+
+        private static void AddBacklogRows(DataView dv, DataTable dest, string rollupField, string rollupValue) {
+
+            SortedDictionary<string, int> opened = new SortedDictionary<string, int>();
+            SortedDictionary<string, int> closed = new SortedDictionary<string, int>();
+
+            foreach (DataRowView drv in dv) {
+                AddToWeeklyCount(opened, drv[@"created_at"]);
+                AddToWeeklyCount(closed, drv[@"closed_at"]);
+            }
+
+            int runningTotal = 0;
+            foreach (string key in opened.Keys) {
+                DataRow dr = dest.NewRow();
+
+                int o = opened.ContainsKey(key) ? opened[key] : 0;
+                dr[@"count1"] = o;
+
+                int c = closed.ContainsKey(key) ? closed[key] : 0;
+                dr[@"count2"] = c;
+
+                runningTotal = runningTotal + o - c;
+                dr[@"count3"] = runningTotal;
+                
+                dr[@"date"] = key;
+                dr[@"rolluptype"] = rollupField;
+                dr[@"rollupvalue"] = rollupValue;
+                dest.Rows.Add(dr);
+            }
+        }
+
+        #endregion
+
+
         #region Common Functions
-        public static DateTime WeekEnding(object rawInput) {
+        private static void AddToWeeklyCount(SortedDictionary<string, int> counts, object rawDate) {
+            DateTime? wkEnding = WeekEnding(rawDate);
+            if (wkEnding != null) {
+                string key = wkEnding.Value.ToString(@"yyyy-MM-dd");
+                if (counts.ContainsKey(key))
+                    counts[key] += 1;
+                else
+                    counts.Add(key, 1);
+            }
+        }
+
+        public static DateTime? WeekEnding(object rawInput) {
+            if (rawInput == null ||
+                string.IsNullOrEmpty(rawInput.ToString())) return null;
             return WeekEnding(DateTime.Parse(rawInput.ToString()));
         }
 
-        public static DateTime WeekEnding(DateTime input) {
+        public static DateTime? WeekEnding(DateTime input) {
             DateTime EndOfWeek = input.AddDays(-(int)input.DayOfWeek);
             if (input.DayOfWeek != DayOfWeek.Sunday)
                 EndOfWeek = EndOfWeek.AddDays(7);
             return new DateTime(EndOfWeek.Year, EndOfWeek.Month, EndOfWeek.Day);
+        }
+
+        private static int IssueAge(DataRow dr) {
+            if (! HasFieldValue(dr[@"created_at"])) return 0;
+            if (! HasFieldValue(dr[@"closed_at"])) return -1;
+            DateTime created = DateTime.Parse(dr[@"created_at"].ToString());
+            DateTime closed = DateTime.Parse(dr[@"closed_at"].ToString());
+
+            return closed.Subtract(created).Days;
+        }
+
+        private static bool HasFieldValue(object rawValue) {
+            if (rawValue == null ||
+                string.IsNullOrEmpty(rawValue.ToString())) return false;
+            return true;
         }
 
         public static IEnumerable<string> DistinctValues(IEnumerable<DataRow> source, string groupField) {

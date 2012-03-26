@@ -58,6 +58,7 @@ namespace ProjectStatsConsole {
                 DataSet output = new DataSet();
                 output.Tables.Add(ProjectStats.Logic.ProjectStatsLogic.CycleTime(dt));
                 output.Tables.Add(ProjectStats.Logic.ProjectStatsLogic.Productivity(dt));
+                output.Tables.Add(ProjectStats.Logic.ProjectStatsLogic.Backlog(dt));
 
                 foreach (DataTable tbl in output.Tables) {
                     ShowTable(tbl);

@@ -12,8 +12,8 @@ namespace ProjectStats.Tests {
         [TestCase(@"2012-03-26", @"4/1/2012")]
         public void WeekEndingTests(string input, string expected) {
             DateTime subject = DateTime.Parse(input);
-            DateTime actual = ProjectStatsLogic.WeekEnding(subject);
-            Assert.AreEqual(expected, actual.ToShortDateString());
+            DateTime? actual = ProjectStatsLogic.WeekEnding(subject);
+            Assert.AreEqual(expected, actual.Value.ToShortDateString());
         }
     }
 }
