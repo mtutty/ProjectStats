@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Data;
 using ProjectStats.Model;
+using System.Collections;
 
 namespace ProjectStats.Logic {
     public class ProjectStatsLogic {
@@ -35,11 +36,8 @@ namespace ProjectStats.Logic {
 
         private static void AddCycleTimeRows(DataTable dtSource, DataTable dest, string rollupField) {
 
-            var distinctNames = (from row in dtSource.AsEnumerable()
-                                 select row.Field<string>(rollupField)).Distinct();
-
             DataRow[] rows;
-            foreach (var name in distinctNames) {
+            foreach (var name in DistinctValues(dtSource.AsEnumerable(), rollupField)) {
                 string filter = string.Format(@"closed_at is not null AND {0} = '{1}'", rollupField, name);
                 rows = dtSource.Select(filter);
 
@@ -63,7 +61,7 @@ namespace ProjectStats.Logic {
 
         private static int[] CalculateCycleTime(DataRow[] rows) {
             // Bins: 0 days, 1-2 days, 3-7 days, 8-14 days, 15-30 days, 31+
-            int[] bins = { 1, 3, 8, 15 };
+            int[] bins = { 1, 3, 8, 15, 31 };
             int[] values = new int[bins.Length + 1];
 
             foreach (DataRow dr in rows) {
@@ -90,7 +88,7 @@ namespace ProjectStats.Logic {
 
         #region Productivity (closed count by week)
         public static DataTable Productivity(DataTable dtSource) {
-            DataTable ret = ProjectStatsModelFactory.CreateCountByWeekTable();
+            DataTable ret = ProjectStatsModelFactory.CreateCountByWeekTable(@"Productivity");
 
             AddProductivityRows(dtSource, ret);
             AddProductivityRows(dtSource, ret, @"milestone");
@@ -99,29 +97,61 @@ namespace ProjectStats.Logic {
         }
 
         private static void AddProductivityRows(DataTable dtSource, DataTable ret) {
-            DataView dv = new DataView(dtSource, @"closed_at is not null", @"closed_at", DataViewRowState.CurrentRows);
-
-            DataRow dr = null;
-            string currentDate = string.Empty;
-            int count = 0;
-            foreach (DataRowView drv in dv) {
-                if (currentDate != drv[@"closed_at"].ToString()) {
-                    // TODO Count
-                }
-            }
+            DataView dv = new DataView(dtSource, @"closed_at is not null", null, DataViewRowState.CurrentRows);
+            AddProductivityRows(dv, ret, @"Overall", string.Empty);
         }
 
         private static void AddProductivityRows(DataTable dtSource, DataTable ret, string rollupField) {
-            throw new NotImplementedException();
+            string filterTemplate = @"closed_at is not null and {0} = '{1}'";
+            foreach (string rollupValue in DistinctValues(dtSource.AsEnumerable(), rollupField)) {
+                DataView dv = new DataView(dtSource, string.Format(filterTemplate, rollupField, rollupValue), null, DataViewRowState.CurrentRows);
+                AddProductivityRows(dv, ret, rollupField, rollupValue);
+            }
+        }
+
+        private static void AddProductivityRows(DataView dv, DataTable dest, string rollupField, string rollupValue) {
+
+            SortedDictionary<string, int> counts = new SortedDictionary<string, int>();
+
+            foreach (DataRowView drv in dv) {
+                string key = WeekEnding(drv[@"closed_at"]).ToString(@"yyyy-MM-dd");
+                if (counts.ContainsKey(key))
+                    counts[key] += 1;
+                else
+                    counts.Add(key, 1);
+            }
+
+            foreach (string key in counts.Keys) {
+                    DataRow dr = dest.NewRow();
+                    dr[@"count1"] = counts[key];
+                    dr[@"date"] = key;
+                    dr[@"rolluptype"] = rollupField;
+                    dr[@"rollupvalue"] = rollupValue;
+                    dest.Rows.Add(dr);
+            }
+        }
+
+        #endregion
+
+        #region Common Functions
+        public static DateTime WeekEnding(object rawInput) {
+            return WeekEnding(DateTime.Parse(rawInput.ToString()));
         }
 
         public static DateTime WeekEnding(DateTime input) {
             DateTime EndOfWeek = input.AddDays(-(int)input.DayOfWeek);
-            if (input.DayOfWeek != DayOfWeek.Sunday) 
+            if (input.DayOfWeek != DayOfWeek.Sunday)
                 EndOfWeek = EndOfWeek.AddDays(7);
-            return EndOfWeek;
+            return new DateTime(EndOfWeek.Year, EndOfWeek.Month, EndOfWeek.Day);
         }
 
+        public static IEnumerable<string> DistinctValues(IEnumerable<DataRow> source, string groupField) {
+            var ret = (from row in source
+                                 select row.Field<string>(groupField)).Distinct();
+
+            return ret;
+        }
         #endregion
+
     }
 }

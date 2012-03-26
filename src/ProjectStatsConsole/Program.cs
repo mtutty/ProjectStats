@@ -4,6 +4,7 @@ using Newtonsoft.Json.Linq;
 using ConsoleApplication;
 using System.IO;
 using System.Data;
+using System.Linq;
 using ProjectStats.Client;
 
 namespace ProjectStatsConsole {
@@ -54,23 +55,33 @@ namespace ProjectStatsConsole {
             }
 
             if (dt != null) {
-                Separator();
-                Out(@"Cycle Times");
-                DataTable ct = ProjectStats.Logic.ProjectStatsLogic.CycleTime(dt);
+                DataSet output = new DataSet();
+                output.Tables.Add(ProjectStats.Logic.ProjectStatsLogic.CycleTime(dt));
+                output.Tables.Add(ProjectStats.Logic.ProjectStatsLogic.Productivity(dt));
 
-                string header = string.Empty;
-                foreach (DataRow item in ct.Rows) {
-                    Out(@"{0} {1}: {2}, {3}, {4}, {5}, {6}, {7}",
-                        item[@"rolluptype"], item[@"rollupvalue"],
-                        item[@"bin1"], item[@"bin2"], item[@"bin3"],
-                        item[@"bin4"], item[@"bin5"], item[@"bin6"]
-                        );
+                foreach (DataTable tbl in output.Tables) {
+                    ShowTable(tbl);
                 }
             }
         }
 
         protected override void Exit(Arguments arguments) {
             if (arguments.WaitForExit) WaitForExit();
+        }
+
+        private void ShowTable(DataTable dt) {
+            Separator();
+            Out(dt.TableName);
+            string header = string.Empty;
+            foreach (DataColumn col in dt.Columns) {
+                header += col.ColumnName + @",";
+            }
+            Out(header.Substring(0, header.Length - 1));
+
+            foreach (DataRow dr in dt.Rows) {
+                Out(string.Join(@",", dr.ItemArray));
+            }
+            Out(@"");
         }
 
         public class Arguments {

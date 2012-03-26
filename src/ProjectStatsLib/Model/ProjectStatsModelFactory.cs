@@ -4,13 +4,14 @@ using System.Linq;
 using System.Text;
 using System.Data;
 using System.Collections.Specialized;
+using System.Collections;
 
 namespace ProjectStats.Model {
     public class ProjectStatsModelFactory {
         private ProjectStatsModelFactory() { /* not creatable */ }
 
         public static DataTable CreateIssuesTable() {
-            StringDictionary sd = new StringDictionary();
+            Hashtable sd = new Hashtable();
 
             sd.Add(@"id", @"id");
             sd.Add("state", "state");
@@ -32,7 +33,7 @@ namespace ProjectStats.Model {
         }
 
         public static DataTable CreateCycleTimeTable() {
-            StringDictionary sd = new StringDictionary();
+            Hashtable sd = new Hashtable();
 
             sd.Add(@"rolluptype", @"rolluptype");
             sd.Add("rollupvalue", "rollupvalue");
@@ -47,7 +48,11 @@ namespace ProjectStats.Model {
         }
 
         public static DataTable CreateCountByWeekTable() {
-            StringDictionary sd = new StringDictionary();
+            return CreateCountByWeekTable(@"CountByWeek");
+        }
+
+        public static DataTable CreateCountByWeekTable(string tableName) {
+            Hashtable sd = new Hashtable();
 
             sd.Add(@"rolluptype", @"rolluptype");
             sd.Add("rollupvalue", "rollupvalue");
@@ -56,19 +61,17 @@ namespace ProjectStats.Model {
             sd.Add("count2", "count2");
             sd.Add("count3", "count3");
 
-            return CreateDataTable(@"CycleTime", sd);
+            return CreateDataTable(tableName, sd);
         }
 
-        public static DataTable CreateDataTable(string TableName, StringDictionary FieldList) {
+        public static DataTable CreateDataTable(string TableName, Hashtable FieldList) {
             DataTable ret = new DataTable(TableName);
 
             foreach (string colName in FieldList.Keys) {
-                ret.Columns.Add(colName).Caption = FieldList[colName];
+                ret.Columns.Add(colName).Caption = FieldList[colName].ToString();
             }
             return ret;
-
         }
-
 
     }
 }
